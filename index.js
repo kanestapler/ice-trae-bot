@@ -13,28 +13,35 @@ const GAMECAST_URL = `http://site.web.api.espn.com/apis/site/v2/sports/basketbal
 const PRE_SEASON = '1'
 const REGULAR_SEASON = '2'
 const POST_SEASON = '3'
-const PLAYER_ID = '3202'
+const PLAYER_ID = '3975'
 const SHOT_TYPE = {
     'ThreePoint': '3PT',
     'FieldGoal': 'FG',
     'FreeThrow': 'FT'
 }
 
-getCurrentGameID().then(function (gameID) {
-    if (gameID) {
-        const numberOfMadeShots = getMadeShots(gameID, SHOT_TYPE.ThreePoint)
-    } else {
-        console.log('No Active Game')
-    }
-}).catch(function (error) {
-    console.log(error)
-})
+function runPoller() {
+    getCurrentGameID().then(function (gameID) {
+        if (gameID) {
+            getMadeShots(gameID, SHOT_TYPE.ThreePoint).then(function(numberOfMadeShots) {
+                console.log(`Has made: ${numberOfMadeShots} ${SHOT_TYPE.ThreePoint}`)
+            }).catch(function(error) {
+                console.log('Error getting shots made from gameID')
+            })
+        } else {
+            console.log('No Active Game')
+        }
+    }).catch(function (error) {
+        console.log(error)
+    })
+}
 
 function getMadeShots(gameID, shotType) {
     url = getGameCastURL(gameID)
     return new Promise(function (resolve, reject) {
         rp.get(url).then(function (dataString) {
             const gamecastData = JSON.parse(dataString)
+            if (gamecastData.boxscore.players) {
             const arrayPosition = getArrayPosition(shotType, gamecastData)
             const allPlayersStats = gamecastData.boxscore.players.find(function (x) {
                 return x.team.abbreviation === TEAM_ABBREVIATION
@@ -43,9 +50,11 @@ function getMadeShots(gameID, shotType) {
                 return x.athlete.id === PLAYER_ID
             })
             const shotStats = playerStats.stats[arrayPosition]
-            console.log(shotStats)
-            console.log(getMadeShotsFromString(shotStats))
             resolve(getMadeShotsFromString(shotStats))
+        } else {
+            // As far as I can tell this means game hasn't started yet
+            resolve('0')
+        }
         }).catch(function (error) {
             console.log('Error calling gamecast API', error)
             reject('Error calling gamecast API')
@@ -97,11 +106,13 @@ function checkIfDateIsWithin5HoursAndInThePast(dateString) {
     const currentDate = new Date()
     const dateToTest = new Date(dateString)
     const numOfHours = dateDiffInHours(currentDate, dateToTest)
-    return (numOfHours <= 5 && numOfHours > 0)
+    return (numOfHours <= 5 && numOfHours >= 0)
 }
 
 // a and b are javascript Date objects
 function dateDiffInHours(current, test) {
     const MS_PER_HOUR = 1000 * 60 * 60;
-    return Math.floor((test - current) / MS_PER_HOUR);
+    return (current - test) / MS_PER_HOUR;
 }
+
+module.exports.handler = runPoller
