@@ -1,11 +1,6 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const serverless = require('serverless-http')
+
 const rp = require('request-promise')
 require('dotenv').config()
-const app = express()
-app.use(bodyParser.json())
-const PORT = 3001
 const GAME_ID = 'GAME_ID'
 const TEAM_ABBREVIATION = 'GS'
 const SCHEDULE_URL = `http://site.web.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${TEAM_ABBREVIATION}/schedule?region=us&lang=en&seasontype=`
