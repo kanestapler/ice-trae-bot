@@ -2,24 +2,29 @@
 const rp = require('request-promise')
 require('dotenv').config()
 const GAME_ID = 'GAME_ID'
-const TEAM_ABBREVIATION = 'GS'
+const TEAM_ABBREVIATION = 'ATL'
 const SCHEDULE_URL = `http://site.web.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${TEAM_ABBREVIATION}/schedule?region=us&lang=en&seasontype=`
 const GAMECAST_URL = `http://site.web.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${GAME_ID}&lang=en&region=us&contentorigin=espn&showAirings=true`
 const PRE_SEASON = '1'
 const REGULAR_SEASON = '2'
 const POST_SEASON = '3'
-const PLAYER_ID = '3975'
+const PLAYER_ID = '4277905'
 const SHOT_TYPE = {
     'ThreePoint': '3PT',
     'FieldGoal': 'FG',
     'FreeThrow': 'FT'
 }
-
+runPoller()
 function runPoller() {
     getCurrentGameID().then(function (gameID) {
         if (gameID) {
             getMadeShots(gameID, SHOT_TYPE.ThreePoint).then(function(numberOfMadeShots) {
                 console.log(`Has made: ${numberOfMadeShots} ${SHOT_TYPE.ThreePoint}`)
+                tellValidatorShotsMade(gameID, numberOfMadeShots).then(function(response){
+                    console.log('Success to vali')
+                }).catch(function(error) {
+                    console.log('Error calling vali', error)
+                })
             }).catch(function(error) {
                 console.log('Error getting shots made from gameID')
             })
@@ -29,6 +34,20 @@ function runPoller() {
     }).catch(function (error) {
         console.log(error)
     })
+}
+
+function tellValidatorShotsMade(gameID, amount) {
+    const options = {
+        method: 'POST',
+        uri: process.env.VALIDATOR_URL,
+        body: {
+            shots: amount,
+            gameID: gameID.toString(),
+            token: process.env.API_TOKEN
+        },
+        json: true // Automatically stringifies the body to JSON
+    };
+    return rp.post(options)
 }
 
 function getMadeShots(gameID, shotType) {
@@ -101,6 +120,7 @@ function checkIfDateIsWithin5HoursAndInThePast(dateString) {
     const currentDate = new Date()
     const dateToTest = new Date(dateString)
     const numOfHours = dateDiffInHours(currentDate, dateToTest)
+    console.log(numOfHours)
     return (numOfHours <= 5 && numOfHours >= 0)
 }
 
