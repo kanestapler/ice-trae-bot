@@ -14,7 +14,7 @@ const SHOT_TYPE = {
     'FieldGoal': 'FG',
     'FreeThrow': 'FT'
 }
-runPoller()
+
 function runPoller() {
     getCurrentGameID().then(function (gameID) {
         if (gameID) {
