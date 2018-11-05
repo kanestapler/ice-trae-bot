@@ -11,3 +11,7 @@ functions:
     handler: index.handler
     events:
       - schedule: rate(1 minute)
+
+package:
+  exclude:
+    - .env
