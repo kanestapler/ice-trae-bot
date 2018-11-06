@@ -1,27 +1,27 @@
 
 const rp = require('request-promise')
 require('dotenv').config()
-const PRE_SEASON = '1'
+
 const REGULAR_SEASON = '2'
-const POST_SEASON = '3'
 
 function runPoller() {
-    getCurrentGameID().then(function (gameID) {
+    getCurrentGameID().then((gameID) => {
         if (gameID) {
-            getMadeShots(gameID, process.env.STAT_LABEL).then(function (gameData) {
+            getMadeShots(gameID, process.env.STAT_LABEL).then((gameData) => {
                 console.log(`Has made: ${gameData.numberOfMadeShots} ${process.env.STAT_LABEL} againt the ${gameData.opponent}`)
-                tellValidatorShotsMade(gameID, gameData.numberOfMadeShots, gameData.opponent).then(function (response) {
-                    console.log('Success to vali')
-                }).catch(function (error) {
-                    console.log('Error calling vali', error)
-                })
-            }).catch(function (error) {
+                tellValidatorShotsMade(gameID, gameData.numberOfMadeShots, gameData.opponent)
+                    .then(() => {
+                        console.log('Success to vali')
+                    }).catch((error) => {
+                        console.log('Error calling vali', error)
+                    })
+            }).catch((error) => {
                 console.log('Error getting shots made from gameID', error)
             })
         } else {
             console.log('No Active Game')
         }
-    }).catch(function (error) {
+    }).catch((error) => {
         console.log(error)
     })
 }
@@ -33,37 +33,40 @@ function tellValidatorShotsMade(gameID, amount, opponent) {
         body: {
             shots: amount,
             gameID: gameID.toString(),
-            opponent: opponent,
-            token: process.env.API_TOKEN
+            opponent,
+            token: process.env.API_TOKEN,
         },
-        json: true // Automatically stringifies the body to JSON
+        json: true, // Automatically stringifies the body to JSON
     }
     return rp.post(options)
 }
 
 function getMadeShots(gameID, shotType) {
     const url = getGamecastURL(gameID)
-    return new Promise(function (resolve, reject) {
-        rp.get(url).then(function (dataString) {
+    return new Promise((resolve, reject) => {
+        rp.get(url).then((dataString) => {
             const gamecastData = JSON.parse(dataString)
             const opponentName = getOpponentName(gamecastData)
             if (gamecastData.boxscore.players) {
                 const arrayPosition = getArrayPosition(shotType, gamecastData)
-                const allPlayersStats = gamecastData.boxscore.players.find(function (teamAndStats) {
-                    return isTeamFollowing(teamAndStats.team)
-                })
-                const playerStats = allPlayersStats.statistics[0].athletes.find(function (athleteProfile) {
-                    return athleteProfile.athlete.id === process.env.PLAYER_ID
-                })
+                const allPlayersStats = gamecastData.boxscore.players.find(
+                    teamAndStats => isTeamFollowing(teamAndStats.team)
+                )
+                const playerStats = allPlayersStats.statistics[0].athletes.find(
+                    athleteProfile => athleteProfile.athlete.id === process.env.PLAYER_ID
+                )
                 const shotStats = playerStats.stats[arrayPosition]
-                resolve({ numberOfMadeShots: getMadeShotsFromString(shotStats), opponent: opponentName })
+                resolve({
+                    numberOfMadeShots: getMadeShotsFromString(shotStats),
+                    opponent: opponentName,
+                })
             } else {
                 // As far as I can tell this means game hasn't started yet
                 resolve({ numberOfMadeShots: '0', opponent: opponentName })
             }
-        }).catch(function (error) {
+        }).catch((error) => {
             console.log('Error calling gamecast API', error)
-            reject('Error calling gamecast API')
+            reject(new Error('Error calling gamecast API'))
         })
     })
 }
@@ -73,14 +76,14 @@ function getMadeShotsFromString(shotStats) {
 }
 
 function getArrayPosition(shotType, gamecastData) {
-    return gamecastData.boxscore.players[0].statistics[0].labels.findIndex(function (label) {
-        return label === shotType
-    })
+    return gamecastData.boxscore.players[0].statistics[0].labels.findIndex(
+        label => label === shotType
+    )
 }
 
 function getCurrentGameID() {
-    return new Promise(function (resolve, reject) {
-        rp.get(getScheduleURL()).then(function (dataString) {
+    return new Promise((resolve, reject) => {
+        rp.get(getScheduleURL()).then((dataString) => {
             const responseData = JSON.parse(dataString)
             const game = getCurrentGame(responseData.events)
             if (game) {
@@ -88,15 +91,15 @@ function getCurrentGameID() {
             } else {
                 resolve('401070809')
             }
-        }).catch(function (error) {
+        }).catch((error) => {
             console.log('Error calling schedule API', error)
-            reject('Error calling schedule API')
+            reject(new Error('Error calling schedule API'))
         })
     })
 }
 
 function getCurrentGame(events) {
-    for (let i = 0; i < events.length; i++) {
+    for (let i = 0; i < events.length; i += 1) {
         if (checkIfDateIsWithin5HoursAndInThePast(events[i].date)) {
             return events[i]
         }
@@ -108,7 +111,7 @@ function checkIfDateIsWithin5HoursAndInThePast(dateString) {
     const currentDate = new Date()
     const dateToTest = new Date(dateString)
     const numOfHours = dateDiffInHours(currentDate, dateToTest)
-    //console.log(numOfHours)
+    // console.log(numOfHours)
     return (numOfHours <= 5 && numOfHours >= 0)
 }
 
@@ -119,9 +122,9 @@ function dateDiffInHours(current, test) {
 }
 
 function getOpponentName(gamecastData) {
-    const opponent = gamecastData.boxscore.teams.find(function (teamAndStats) {
-        return !isTeamFollowing(teamAndStats.team)
-    })
+    const opponent = gamecastData.boxscore.teams.find(
+        teamAndStats => !isTeamFollowing(teamAndStats.team)
+    )
     return opponent.team.name
 }
 
