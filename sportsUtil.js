@@ -23,16 +23,16 @@ function getCurrentGameID(sport, league, team) {
     })
 }
 
-function getGameStats(gameID, playerID, statType, sport, league) {
+function getGameStats(gameID, playerID, statType, sport, league, team) {
     const url = getGamecastURL(sport, league, gameID)
     return new Promise((resolve, reject) => {
         rp.get(url).then((dataString) => {
             const gamecastData = JSON.parse(dataString)
-            const opponent = getOpponent(gamecastData)
+            const opponent = getOpponent(gamecastData, team)
             if (gamecastData.boxscore.players) {
                 const arrayPosition = getArrayPositionOfStatType(statType, gamecastData)
                 const allPlayersStats = gamecastData.boxscore.players.find(
-                    teamAndStats => isTeamFollowing(teamAndStats.team)
+                    teamAndStats => isTeamFollowing(teamAndStats.team, team)
                 )
                 const playerStats = allPlayersStats.statistics[0].athletes.find(
                     athleteProfile => athleteProfile.athlete.id === playerID
@@ -53,15 +53,14 @@ function getGameStats(gameID, playerID, statType, sport, league) {
     })
 }
 
-function getOpponent(gamecastData) {
+function getOpponent(gamecastData, team) {
     const opponent = gamecastData.boxscore.teams.find(
-        teamAndStats => !isTeamFollowing(teamAndStats.team)
+        teamAndStats => !isTeamFollowing(teamAndStats.team, team)
     )
     return opponent.team
 }
 
-function isTeamFollowing(team) {
-    const followingTeam = process.env.TEAM
+function isTeamFollowing(team, followingTeam) {
     return (team.abbreviation === followingTeam || team.id === followingTeam)
 }
 
@@ -86,7 +85,7 @@ function checkIfDateIsWithin5HoursAndInThePast(dateString) {
     const dateToTest = new Date(dateString)
     const numOfHours = dateDiffInHours(currentDate, dateToTest)
     // console.log(numOfHours)
-    return (numOfHours <= 5 && numOfHours >= 0)
+    return (numOfHours <= 35 && numOfHours >= 0)
 }
 
 function dateDiffInHours(current, test) {

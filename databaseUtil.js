@@ -1,57 +1,57 @@
-const AWS = require('aws-sdk')
+const dynamo = require('dynamodb')
+const Joi = require('joi')
 require('dotenv').config()
 
-AWS.config.update({ region: 'us-east-1' })
-const ddb = new AWS.DynamoDB({ apiVersion: '2012-10-08' })
+dynamo.AWS.config.update({ region: 'us-east-1' })
 
-getPlayer('4277905').then((data) => {
-    console.log(JSON.stringify(data))
+const Player = dynamo.define('ice-trae-bot-test', {
+    hashKey: 'PlayerID',
+    timestamps: true,
+    schema: {
+        PlayerID: Joi.string(),
+        AccessToken: Joi.string(),
+        AccessTokenSecret: Joi.string(),
+        Games: Joi.object(),
+        League: Joi.string(),
+        PlayerName: Joi.string(),
+        SlackWebHook: Joi.string(),
+        Sport: Joi.string(),
+        Team: Joi.string(),
+    },
 })
-function getPlayer(playerName) {
-    const params = {
-        TableName: process.env.TABLE_NAME,
-        Key: {
-            PlayerID: { S: playerName },
-        },
-    }
+
+function getPlayer(playerID) {
     return new Promise((resolve, reject) => {
-        ddb.getItem(params, (err, data) => {
+        Player.get(playerID, (err, player) => {
             if (err) {
                 reject(new Error(err))
             } else {
-                resolve(data.Item)
+                resolve(player.attrs)
             }
         })
     })
 }
 
-function updateItemInDB(playerTable, gameID, stat) {
-    const newGamesMap = playerTable.Games.M
+function updatePlayerStatInfo(playerItem, gameID, stat) {
+    const newGamesMap = playerItem.Games
     newGamesMap[gameID] = stat
-    const params = {
-        TableName: process.env.TABLE_NAME,
-        Key: {
-            PlayerID: { S: playerTable.PlayerID.S },
-        },
-        ExpressionAttributeNames: {
-            '#G': 'Games',
-        },
-        ExpressionAttributeValues: {
-            ':g': {
-                M: newGamesMap,
-            },
-        },
-        UpdateExpression: 'SET #G = :g',
-    }
-    return new Promise((resolve, reject) => {
-        ddb.updateItem(params, (err, data) => {
-            if (err) {
-                reject(new Error(err))
-            } else {
-                resolve(data)
-            }
-        })
+    Player.update({
+        PlayerID: playerItem.PlayerID,
+        Games: newGamesMap,
+    }, (err, player) => {
+        if (err) {
+            console.log(err)
+        } else {
+            console.log(player)
+        }
     })
 }
 
-module.exports = { updateItemInDB, getPlayer }
+getPlayer('4277905').then((player) => {
+    updatePlayerStatInfo(player, '8888', null)
+})
+
+module.exports = {
+    getPlayer,
+    updatePlayerStatInfo,
+}

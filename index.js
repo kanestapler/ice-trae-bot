@@ -1,42 +1,58 @@
 const rp = require('request-promise')
 require('dotenv').config()
 const SportsUtil = require('./sportsUtil')
+const DatabaseUtil = require('./databaseUtil')
+const PlayerUtil = require('./playerUtil')
+
+const {
+    API_TOKEN,
+    VALIDATOR_URL_PROD,
+    VALIDATOR_URL,
+    STAT_LABEL,
+    TABLE_NAME,
+    PLAYER_ID,
+} = process.env
 
 function runPoller() {
-    SportsUtil.getCurrentGameID(sport, league, team).then((gameID) => {
-        if (gameID) {
-            SportsUtil.getGameStats(gameID, playerID, process.env.STAT_LABEL, sport, league).then((gameData) => {
-                console.log(`Has made: ${gameData.numberOfMadeShots} ${process.env.STAT_LABEL} againt the ${gameData.opponent}`)
-                tellValidatorShotsMade(gameID, gameData.numberOfMadeShots, gameData.opponent)
-                    .then(() => {
-                        console.log('Success to vali')
+    DatabaseUtil.getPlayer(PLAYER_ID).then((playerItem) => {
+        const {
+            AccessToken,
+            AccessTokenSecret,
+            Games,
+            League,
+            PlayerName,
+            SlackWebHook,
+            Team,
+            Sport,
+        } = playerItem
+        SportsUtil.getCurrentGameID(Sport, League, Team).then((gameID) => {
+            if (gameID) {
+                if (Games[gameID]) {
+                    SportsUtil.getGameStats(gameID, PLAYER_ID, STAT_LABEL, Sport, League, Team).then((gameData) => {
+                        console.log(`Has made: ${gameData.stat} ${STAT_LABEL} againt the ${gameData.opponent.name}`)
+                        const statDifferences = PlayerUtil.getStatValuesDifferencesBetween(Games[gameID], gameData.stat)
+                        if (statDifferences) { // Something needs to update
+                            // Broadcast the entire statDifference
+                            DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, gameData.stat) // Update the database with the new stats
+                        } else { // No change. Do nothing
+                        }
                     }).catch((error) => {
-                        console.log('Error calling vali', error)
+                        console.log('Error getting shots made from gameID', error)
                     })
-            }).catch((error) => {
-                console.log('Error getting shots made from gameID', error)
-            })
-        } else {
-            console.log('No Active Game')
-        }
+                } else { // Game just started
+                    DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, null) // Add game to database
+                    // Tweet/Slack the game is starting
+                }
+            } else {
+                console.log('No Active Game')
+            }
+        }).catch((error) => {
+            console.log('Error getting current gameID', error)
+        })
     }).catch((error) => {
-        console.log(error)
+        console.log('Error getting database item', error)
     })
 }
-
-function tellValidatorShotsMade(gameID, amount, opponent) {
-    const options = {
-        method: 'POST',
-        uri: process.env.VALIDATOR_URL,
-        body: {
-            shots: amount,
-            gameID: gameID.toString(),
-            opponent,
-            token: process.env.API_TOKEN,
-        },
-        json: true, // Automatically stringifies the body to JSON
-    }
-    return rp.post(options)
-}
+runPoller()
 
 module.exports.handler = runPoller
