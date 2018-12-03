@@ -20,17 +20,17 @@ function runPoller() {
         SportsUtil.getCurrentGameID(Sport, League, Team).then((gameID) => {
             if (gameID) {
                 if (Games[gameID]) {
-                    SportsUtil.getGameStats(gameID, PLAYER_ID, StatLabel, Sport, League, Team).then((gameData) => {
-                        console.log(`Has made: ${gameData.stat} ${StatLabel} againt the ${gameData.opponent.name}`)
-                        const statDifferences = PlayerUtil.getStatValuesDifferencesBetween(Games[gameID], gameData.stat)
-                        if (statDifferences) { // Something needs to update
-                            BroadcastUtil.broadcastStats(playerItem, statDifferences, gameData.stat, gameData.opponent.name)
-                            DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, gameData.stat) // Update the database with the new stats
-                        } else { // No change. Do nothing
-                        }
-                    }).catch((error) => {
-                        console.log('Error getting shots made from gameID', error)
-                    })
+                    SportsUtil.getGameStats(gameID, PLAYER_ID, StatLabel, Sport, League, Team)
+                        .then((gameData) => {
+                            const statDifferences = PlayerUtil.getStatValueDifference(Games[gameID], gameData.stat)
+                            if (statDifferences) { // Something needs to update
+                                BroadcastUtil.broadcastStats(playerItem, statDifferences, gameData.stat, gameData.opponent.name)
+                                DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, gameData.stat) // Update the database with the new stats
+                            } else { // No change. Do nothing
+                            }
+                        }).catch((error) => {
+                            console.log('Error getting shots made from gameID', error)
+                        })
                 } else { // Game just started
                     DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, null) // Add game to database
                     // Tweet/Slack the game is starting

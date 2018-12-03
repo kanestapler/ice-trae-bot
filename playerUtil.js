@@ -48,7 +48,7 @@ function getStatValuesFromRaw(stat) {
     return rawStats
 }
 
-function getStatValuesDifferencesBetween(oldRawStats, newRawStats) {
+function getStatValueDifference(oldRawStats, newRawStats) {
     const oldStatValues = getStatValuesFromRaw(oldRawStats)
     const newStatValues = getStatValuesFromRaw(newRawStats)
     const statDifferences = getDifferences(oldStatValues, newStatValues)
@@ -64,6 +64,6 @@ class StatValues {
 }
 
 module.exports = {
-    getStatValuesDifferencesBetween,
+    getStatValueDifference,
     getStatValuesFromRaw,
 }

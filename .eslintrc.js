@@ -14,7 +14,7 @@ module.exports = {
         'no-console': 'off',
         'max-len': ['error', {
             'ignoreTrailingComments': true,
-            'code': 100,
+            'code': 150,
             "ignoreUrls": true,
         }],
         'no-eval': 'off',
