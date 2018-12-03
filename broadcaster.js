@@ -12,7 +12,7 @@ function broadcast(twitterAccessToken, twitterAccessTokenSecret, message) {
         body: {
             twitterAccessToken,
             twitterAccessTokenSecret,
-            token: API_TOKEN,
+            apiToken: API_TOKEN,
             message,
         },
         json: true,

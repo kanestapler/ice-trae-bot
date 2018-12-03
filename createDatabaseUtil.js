@@ -3,7 +3,7 @@ const PlayerObject = require('./Player')
 
 dynamo.AWS.config.update({ region: 'us-east-1' })
 
-const Player = dynamo.define('ice-trae-bot-test', PlayerObject)
+const Player = dynamo.define('ice-trae-bot-test', PlayerObject.PlayerObject)
 
 // eslint-disable-next-line no-unused-vars
 function createTable() {
@@ -13,6 +13,7 @@ function createTable() {
         }
     })
 }
+// createTable()
 
 // eslint-disable-next-line no-unused-vars
 function createPlayer() {
@@ -37,3 +38,4 @@ function createPlayer() {
         }
     })
 }
+// createPlayer()

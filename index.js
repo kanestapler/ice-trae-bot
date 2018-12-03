@@ -11,12 +11,8 @@ const {
 function runPoller() {
     DatabaseUtil.getPlayer(PLAYER_ID).then((playerItem) => {
         const {
-            AccessToken,
-            AccessTokenSecret,
             Games,
             League,
-            PlayerName,
-            SlackWebHook,
             Team,
             Sport,
             StatLabel,
@@ -24,8 +20,8 @@ function runPoller() {
         SportsUtil.getCurrentGameID(Sport, League, Team).then((gameID) => {
             if (gameID) {
                 if (Games[gameID]) {
-                    SportsUtil.getGameStats(gameID, PLAYER_ID, STAT_LABEL, Sport, League, Team).then((gameData) => {
-                        console.log(`Has made: ${gameData.stat} ${STAT_LABEL} againt the ${gameData.opponent.name}`)
+                    SportsUtil.getGameStats(gameID, PLAYER_ID, StatLabel, Sport, League, Team).then((gameData) => {
+                        console.log(`Has made: ${gameData.stat} ${StatLabel} againt the ${gameData.opponent.name}`)
                         const statDifferences = PlayerUtil.getStatValuesDifferencesBetween(Games[gameID], gameData.stat)
                         if (statDifferences) { // Something needs to update
                             BroadcastUtil.broadcastStats(playerItem, statDifferences, gameData.stat, gameData.opponent.name)
