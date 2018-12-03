@@ -4,8 +4,6 @@ const MessageBuilder = require('./messageBuilder')
 const Broadcaster = require('./broadcaster')
 
 function broadcastStats(playerItem, statDifference, rawStat, opponent) {
-    // console.log(playerItem)
-    // console.log(statDifference)
     let successBroadcastArray = []
     let failureBroadcastArray = []
     if (needToBroadcastSuccess(playerItem.NewSuccessMessage, statDifference.successes)) {
@@ -64,9 +62,9 @@ function removeFailureFromRaw(rawStat) {
     return stats.join('-')
 }
 
-function broadcastGamestart(playerItem, opponent) {
+// function broadcastGamestart(playerItem, opponent) {
 
-}
+// }
 
 function getMessage(playerItem, opponent, rawStat, codeString) {
     const stats = PlayerUtil.getStatValuesFromRaw(rawStat)
@@ -98,5 +96,5 @@ DatabaseUtil.getPlayer('4277905').then((playerItem) => {
 
 module.exports = {
     broadcastStats,
-    broadcastGamestart,
+    // broadcastGamestart,
 }
