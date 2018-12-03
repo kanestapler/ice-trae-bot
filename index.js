@@ -1,15 +1,10 @@
-const rp = require('request-promise')
 require('dotenv').config()
 const SportsUtil = require('./sportsUtil')
 const DatabaseUtil = require('./databaseUtil')
 const PlayerUtil = require('./playerUtil')
+const BroadcastUtil = require('./broadcastUtil')
 
 const {
-    API_TOKEN,
-    VALIDATOR_URL_PROD,
-    VALIDATOR_URL,
-    STAT_LABEL,
-    TABLE_NAME,
     PLAYER_ID,
 } = process.env
 
@@ -24,6 +19,7 @@ function runPoller() {
             SlackWebHook,
             Team,
             Sport,
+            StatLabel,
         } = playerItem
         SportsUtil.getCurrentGameID(Sport, League, Team).then((gameID) => {
             if (gameID) {
@@ -32,7 +28,7 @@ function runPoller() {
                         console.log(`Has made: ${gameData.stat} ${STAT_LABEL} againt the ${gameData.opponent.name}`)
                         const statDifferences = PlayerUtil.getStatValuesDifferencesBetween(Games[gameID], gameData.stat)
                         if (statDifferences) { // Something needs to update
-                            // Broadcast the entire statDifference
+                            BroadcastUtil.broadcastStats(playerItem, statDifferences, gameData.stat, gameData.opponent.name)
                             DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, gameData.stat) // Update the database with the new stats
                         } else { // No change. Do nothing
                         }

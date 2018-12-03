@@ -65,4 +65,5 @@ class StatValues {
 
 module.exports = {
     getStatValuesDifferencesBetween,
+    getStatValuesFromRaw,
 }

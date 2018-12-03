@@ -1,24 +1,8 @@
 const dynamo = require('dynamodb')
-const Joi = require('joi')
-require('dotenv').config()
+const PlayerObject = require('./Player')
 
 dynamo.AWS.config.update({ region: 'us-east-1' })
-
-const Player = dynamo.define('ice-trae-bot-test', {
-    hashKey: 'PlayerID',
-    timestamps: true,
-    schema: {
-        PlayerID: Joi.string(),
-        AccessToken: Joi.string(),
-        AccessTokenSecret: Joi.string(),
-        Games: Joi.object(),
-        League: Joi.string(),
-        PlayerName: Joi.string(),
-        SlackWebHook: Joi.string(),
-        Sport: Joi.string(),
-        Team: Joi.string(),
-    },
-})
+const Player = dynamo.define('ice-trae-bot-test', PlayerObject.PlayerObject)
 
 function getPlayer(playerID) {
     return new Promise((resolve, reject) => {
@@ -47,9 +31,9 @@ function updatePlayerStatInfo(playerItem, gameID, stat) {
     })
 }
 
-getPlayer('4277905').then((player) => {
-    updatePlayerStatInfo(player, '8888', null)
-})
+// getPlayer('4277905').then((player) => {
+//     updatePlayerStatInfo(player, '8888', '0-1')
+// })
 
 module.exports = {
     getPlayer,

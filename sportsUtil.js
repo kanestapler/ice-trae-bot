@@ -85,7 +85,7 @@ function checkIfDateIsWithin5HoursAndInThePast(dateString) {
     const dateToTest = new Date(dateString)
     const numOfHours = dateDiffInHours(currentDate, dateToTest)
     // console.log(numOfHours)
-    return (numOfHours <= 35 && numOfHours >= 0)
+    return (numOfHours <= 5 && numOfHours >= 0)
 }
 
 function dateDiffInHours(current, test) {

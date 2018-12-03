@@ -15,6 +15,9 @@ module.exports = {
         'max-len': ['error', {
             'ignoreTrailingComments': true,
             'code': 100,
-        }]
+            "ignoreUrls": true,
+        }],
+        'no-eval': 'off',
+        'no-await-in-loop': 'off'
     }
 };
