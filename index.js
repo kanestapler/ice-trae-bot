@@ -45,6 +45,5 @@ function runPoller() {
         console.log('Error getting database item', error)
     })
 }
-runPoller()
 
 module.exports.handler = runPoller
