@@ -11,7 +11,7 @@ function getDifferences(oldStats, newStats) {
     if (_.isEqual(oldStats, newStats)) {
         return null
     }
-    const {
+    let {
         successes: oldSuccesses,
         failures: oldFailures,
         attempts: oldAttempts,
@@ -21,6 +21,15 @@ function getDifferences(oldStats, newStats) {
         failures: newFailures,
         attempts: newAttempts,
     } = newStats
+    if (!oldSuccesses) {
+        oldSuccesses = 0
+    }
+    if (!oldFailures && newFailures) {
+        oldFailures = 0
+    }
+    if (!oldAttempts && newAttempts) {
+        oldAttempts = 0
+    }
     const statValuesOutput = new StatValues(
         newSuccesses - oldSuccesses,
         newFailures - oldFailures,
@@ -30,6 +39,7 @@ function getDifferences(oldStats, newStats) {
 }
 
 function getStatValuesFromRaw(stat) {
+    if (!stat) return stat
     const rawStats = new StatValues()
     if (stat.includes('-')) {
         // Stat can have success and failure (Makes/Misses or Completions/Incompletions)
@@ -49,8 +59,9 @@ function getStatValuesFromRaw(stat) {
 }
 
 function getStatValueDifference(oldRawStats, newRawStats) {
-    const oldStatValues = getStatValuesFromRaw(oldRawStats)
+    let oldStatValues = getStatValuesFromRaw(oldRawStats)
     const newStatValues = getStatValuesFromRaw(newRawStats)
+    if (!oldStatValues) { oldStatValues = {} }
     const statDifferences = getDifferences(oldStatValues, newStatValues)
     return statDifferences
 }

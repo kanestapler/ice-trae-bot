@@ -19,22 +19,22 @@ function runPoller() {
         } = playerItem
         SportsUtil.getCurrentGameID(Sport, League, Team).then((gameID) => {
             if (gameID) {
-                if (Games[gameID]) {
-                    SportsUtil.getGameStats(gameID, PLAYER_ID, StatLabel, Sport, League, Team)
-                        .then((gameData) => {
+                SportsUtil.getGameStats(gameID, PLAYER_ID, StatLabel, Sport, League, Team)
+                    .then((gameData) => {
+                        if (gameID in Games) {
                             const statDifferences = PlayerUtil.getStatValueDifference(Games[gameID], gameData.stat)
                             if (statDifferences) { // Something needs to update
                                 BroadcastUtil.broadcastStats(playerItem, statDifferences, gameData.stat, gameData.opponent.name)
                                 DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, gameData.stat) // Update the database with the new stats
                             } else { // No change. Do nothing
                             }
-                        }).catch((error) => {
-                            console.log('Error getting shots made from gameID', error)
-                        })
-                } else { // Game just started
-                    DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, null) // Add game to database
-                    // Tweet/Slack the game is starting
-                }
+                        } else { // Game just started
+                            DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, null) // Add game to database
+                            BroadcastUtil.broadcastGamestart(playerItem, gameData.opponent.name)
+                        }
+                    }).catch((error) => {
+                        console.log('Error getting shots made from gameID', error)
+                    })
             } else {
                 console.log('No Active Game')
             }

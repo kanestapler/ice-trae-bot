@@ -1,4 +1,3 @@
-const DatabaseUtil = require('./databaseUtil')
 const PlayerUtil = require('./playerUtil')
 const MessageBuilder = require('./messageBuilder')
 const Broadcaster = require('./broadcaster')
@@ -62,12 +61,27 @@ function removeFailureFromRaw(rawStat) {
     return stats.join('-')
 }
 
-// function broadcastGamestart(playerItem, opponent) {
-
-// }
+function broadcastGamestart(playerItem, opponent) {
+    if (playerItem.GameStartMessage) {
+        const broadcastMessage = getMessage(
+            playerItem,
+            opponent,
+            null,
+            playerItem.GameStartMessage
+        )
+        Broadcaster.broadcast(playerItem.AccessToken, playerItem.AccessTokenSecret, broadcastMessage)
+    }
+}
 
 function getMessage(playerItem, opponent, rawStat, codeString) {
-    const stats = PlayerUtil.getStatValuesFromRaw(rawStat)
+    let stats = PlayerUtil.getStatValuesFromRaw(rawStat)
+    // Lazy way to be able to pass null as a rawStat. Should refactor but 🤷‍
+    if (!stats) {
+        stats = {}
+        stats.successes = null
+        stats.failures = null
+        stats.attempts = null
+    }
     const MB = new MessageBuilder.MessageBuilder(
         codeString,
         opponent,
@@ -89,12 +103,7 @@ function needToBroadcastFailure(failureMessage, failures) {
     return (failureMessage && failures > 0)
 }
 
-DatabaseUtil.getPlayer('4277905').then((playerItem) => {
-    const statDifference = PlayerUtil.getStatValuesDifferencesBetween('0-1', '3-6')
-    broadcastStats(playerItem, statDifference, '3-6', 'Warriors')
-})
-
 module.exports = {
     broadcastStats,
-    // broadcastGamestart,
+    broadcastGamestart,
 }
