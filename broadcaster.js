@@ -8,7 +8,7 @@ const {
 function broadcast(twitterAccessToken, twitterAccessTokenSecret, message) {
     const options = {
         method: 'POST',
-        uri: BROADCAST_URL,
+        uri: `${BROADCAST_URL}/broadcast`,
         body: {
             twitterAccessToken,
             twitterAccessTokenSecret,
