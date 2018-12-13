@@ -1,9 +1,12 @@
 const dynamo = require('dynamodb')
 const PlayerObject = require('./Player')
 
-dynamo.AWS.config.update({ region: 'us-east-1' })
+const AWS_REGION = 'us-east-1'
+const TABLE_NAME = 'ice-trae-bot-test'
 
-const Player = dynamo.define('ice-trae-bot-test', PlayerObject.PlayerObject)
+dynamo.AWS.config.update({ region: AWS_REGION })
+
+const Player = dynamo.define(TABLE_NAME, PlayerObject.PlayerObject)
 
 // eslint-disable-next-line no-unused-vars
 function createTable() {
