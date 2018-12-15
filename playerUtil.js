@@ -60,8 +60,9 @@ function getStatValuesFromRaw(stat) {
 
 function getStatValueDifference(oldRawStats, newRawStats) {
     let oldStatValues = getStatValuesFromRaw(oldRawStats)
-    const newStatValues = getStatValuesFromRaw(newRawStats)
+    let newStatValues = getStatValuesFromRaw(newRawStats)
     if (!oldStatValues) { oldStatValues = {} }
+    if (!newStatValues) { newStatValues = {} }
     const statDifferences = getDifferences(oldStatValues, newStatValues)
     return statDifferences
 }
