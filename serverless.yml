@@ -1,4 +1,4 @@
-service: ice-trae-bot-poller
+service: ice-trae-bot-poller-test
 
 provider:
   name: aws
