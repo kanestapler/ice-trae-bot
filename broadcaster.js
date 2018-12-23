@@ -6,6 +6,9 @@ const {
 } = process.env
 
 function broadcast(twitterAccessToken, twitterAccessTokenSecret, message) {
+    if (!message) {
+        return Promise.resolve
+    }
     const options = {
         method: 'POST',
         uri: `${BROADCAST_URL}/broadcast`,
