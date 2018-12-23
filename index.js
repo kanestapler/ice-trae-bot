@@ -9,7 +9,14 @@ const {
 } = process.env
 
 function runPoller() {
-    DatabaseUtil.getPlayer(PLAYER_ID).then((playerItem) => {
+    const playerIDs = PLAYER_ID.split(',')
+    playerIDs.forEach((playerID) => {
+        doEverythingForPlayerID(playerID)
+    })
+}
+
+function doEverythingForPlayerID(playerID) {
+    DatabaseUtil.getPlayer(playerID).then((playerItem) => {
         const {
             Games,
             League,
@@ -19,7 +26,7 @@ function runPoller() {
         } = playerItem
         SportsUtil.getCurrentGameID(Sport, League, Team).then((gameID) => {
             if (gameID) {
-                SportsUtil.getGameStats(gameID, PLAYER_ID, StatLabel, Sport, League, Team)
+                SportsUtil.getGameStats(gameID, playerID, StatLabel, Sport, League, Team)
                     .then((gameData) => {
                         if (gameID in Games) {
                             const statDifferences = PlayerUtil.getStatValueDifference(Games[gameID], gameData.stat)
