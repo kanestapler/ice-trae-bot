@@ -2,7 +2,7 @@ const dynamo = require('dynamodb')
 const PlayerObject = require('./Player')
 
 const AWS_REGION = 'us-east-1'
-const TABLE_NAME = 'ice-trae-bot-test'
+const TABLE_NAME = 'ice-trae-bot'
 
 dynamo.AWS.config.update({ region: AWS_REGION })
 

@@ -2,7 +2,7 @@ const dynamo = require('dynamodb')
 const PlayerObject = require('./Player')
 
 dynamo.AWS.config.update({ region: 'us-east-1' })
-const Player = dynamo.define('ice-trae-bot-test', PlayerObject.PlayerObject)
+const Player = dynamo.define('ice-trae-bot', PlayerObject.PlayerObject)
 
 function getPlayer(playerID) {
     return new Promise((resolve, reject) => {
