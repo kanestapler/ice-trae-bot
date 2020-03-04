@@ -15,7 +15,7 @@
     "dynamodb": "^1.1.2",
     "express": "^4.16.4",
     "joi": "^14.0.6",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "serverless-http": "^1.8.0"
