@@ -18,6 +18,7 @@ module.exports = {
             "ignoreUrls": true,
         }],
         'no-eval': 'off',
-        'no-await-in-loop': 'off'
+        'no-await-in-loop': 'off',
+        'no-useless-return': 0
     }
 };

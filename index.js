@@ -14,6 +14,7 @@ function runPoller() {
         doEverythingForPlayerID(playerID)
     })
 }
+runPoller()
 
 function doEverythingForPlayerID(playerID) {
     DatabaseUtil.getPlayer(playerID).then((playerItem) => {
@@ -28,7 +29,10 @@ function doEverythingForPlayerID(playerID) {
             if (gameID) {
                 SportsUtil.getGameStats(gameID, playerID, StatLabel, Sport, League, Team)
                     .then((gameData) => {
-                        if (gameID in Games) {
+                        if (gameData.isInjured) {
+                            console.log('Player is injured')
+                            DatabaseUtil.updatePlayerStatInfo(playerItem, gameID, null)
+                        } else if (gameID in Games) {
                             const statDifferences = PlayerUtil.getStatValueDifference(Games[gameID], gameData.stat)
                             if (statDifferences) { // Something needs to update
                                 BroadcastUtil.broadcastStats(playerItem, statDifferences, gameData.stat, gameData.opponent.name)

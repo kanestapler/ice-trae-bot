@@ -8,49 +8,96 @@ const SeasonType = {
 
 function getCurrentGameID(sport, league, team) {
     return new Promise((resolve, reject) => {
-        rp.get(getScheduleURL(sport, league, team, SeasonType.RegularSeason)).then((dataString) => {
-            const responseData = JSON.parse(dataString)
-            const game = getCurrentGame(responseData.events)
-            if (game) {
-                resolve(game.id)
-            } else {
-                resolve(null)
-            }
-        }).catch((error) => {
-            console.log('Error calling schedule API', error)
-            reject(new Error('Error calling schedule API'))
-        })
+        rp.get(getScheduleURL(sport, league, team, SeasonType.RegularSeason))
+            .then((dataString) => {
+                const responseData = JSON.parse(dataString)
+                const game = getCurrentGame(responseData.events)
+                if (game) {
+                    resolve(game.id)
+                } else {
+                    resolve(null)
+                }
+            })
+            .catch((error) => {
+                console.log('Error calling schedule API', error)
+                reject(new Error('Error calling schedule API'))
+            })
     })
 }
 
 function getGameStats(gameID, playerID, statType, sport, league, team) {
     const url = getGamecastURL(sport, league, gameID)
     return new Promise((resolve, reject) => {
-        rp.get(url).then((dataString) => {
-            const gamecastData = JSON.parse(dataString)
-            const opponent = getOpponent(gamecastData, team)
-            if (gamecastData.boxscore.players) {
-                const arrayPosition = getArrayPositionOfStatType(statType, gamecastData)
-                const allPlayersStats = gamecastData.boxscore.players.find(
-                    teamAndStats => isTeamFollowing(teamAndStats.team, team)
-                )
-                const playerStats = allPlayersStats.statistics[0].athletes.find(
-                    athleteProfile => athleteProfile.athlete.id === playerID
-                )
-                const stat = playerStats.stats[arrayPosition]
-                resolve({
-                    stat,
-                    opponent,
-                })
-            } else {
-                // As far as I can tell this means game hasn't started yet
-                resolve({ stat: null, opponent })
-            }
-        }).catch((error) => {
-            console.log('Error calling gamecast API', error)
-            reject(new Error('Error calling gamecast API'))
-        })
+        rp.get(url)
+            .then((dataString) => {
+                const gamecastData = JSON.parse(dataString)
+                const opponent = getOpponent(gamecastData, team)
+                const isInjured = isPlayerInjured(playerID, team, gamecastData)
+                if (gamecastData.boxscore.players) {
+                    const arrayPosition = getArrayPositionOfStatType(
+                        statType,
+                        gamecastData
+                    )
+                    if (isInjured) {
+                        resolve({
+                            isInjured,
+                            opponent,
+                        })
+                    } else {
+                        const playerStats = getPlayerStatsFromGamestats(gamecastData, team, playerID)
+                        const stat = playerStats.stats[arrayPosition]
+                        stat.isInjured = isInjured
+                        resolve({
+                            stat,
+                            opponent,
+                        })
+                    }
+                } else {
+                    // As far as I can tell this means game hasn't started yet
+                    resolve({
+                        stat: null,
+                        opponent,
+                        isInjured,
+                    })
+                }
+            })
+            .catch((error) => {
+                console.log('Error calling gamecast API', error)
+                reject(new Error('Error calling gamecast API'))
+            })
     })
+}
+
+function isPlayerInjured(playerId, team, gamecastData) {
+    if (gamecastData.injuries) {
+        for (let i = 0; i < gamecastData.injuries.length; i += 1) {
+            const teamInjuries = gamecastData.injuries[i]
+            for (let j = 0; j < teamInjuries.injuries.length; j += 1) {
+                const injury = teamInjuries.injuries[i]
+                if (injury.athlete.id === playerId) {
+                    return injury.type.abbreviation === 'O'
+                }
+            }
+        }
+    } else {
+        const playerStats = getPlayerStatsFromGamestats(gamecastData, team, playerId)
+        console.log('playerStats', playerStats)
+        if (!playerStats) {
+            return true
+        }
+        return playerStats.reason !== "COACH'S DECISION"
+    }
+    return false
+}
+
+function getPlayerStatsFromGamestats(gamecastData, team, playerID) {
+    const allPlayersStats = gamecastData.boxscore.players.find(
+        teamAndStats => isTeamFollowing(teamAndStats.team, team)
+    )
+    const playerStats = allPlayersStats.statistics[0].athletes.find(
+        athleteProfile => athleteProfile.athlete.id === playerID
+    )
+    return playerStats
 }
 
 function getOpponent(gamecastData, team) {
@@ -61,7 +108,7 @@ function getOpponent(gamecastData, team) {
 }
 
 function isTeamFollowing(team, followingTeam) {
-    return (team.abbreviation === followingTeam || team.id === followingTeam)
+    return team.abbreviation === followingTeam || team.id === followingTeam
 }
 
 function getArrayPositionOfStatType(statType, gamecastData) {
@@ -84,7 +131,7 @@ function checkIfDateIsWithin5HoursAndInThePast(dateString) {
     const currentDate = new Date()
     const dateToTest = new Date(dateString)
     const numOfHours = dateDiffInHours(currentDate, dateToTest)
-    return (numOfHours <= 5 && numOfHours >= 0)
+    return numOfHours <= 5 && numOfHours >= 0
 }
 
 function dateDiffInHours(current, test) {
@@ -100,4 +147,9 @@ function getGamecastURL(sport, league, gameID) {
     return `http://site.web.api.espn.com/apis/site/v2/sports/${sport}/${league}/summary?event=${gameID}&lang=en&region=us&contentorigin=espn`
 }
 
-module.exports = { getCurrentGameID, getGameStats, SeasonType }
+module.exports = {
+    getCurrentGameID,
+    getGameStats,
+    SeasonType,
+    isPlayerInjured,
+}
